@@ -1,6 +1,8 @@
 class Pair:
     def __init__(self, id, token0, token1, volume):
         self.id = id
+        self.reserve0 = 0
+        self.reserve1 = 0
         self.token0 = token0
         self.token1 = token1
         self.volume = volume

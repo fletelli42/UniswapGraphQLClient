@@ -1,14 +1,16 @@
+
 # UniswapGraphQLClient
 
-UniswapGraphQLClient is a Python library designed to interact with the Uniswap V2 subgraph via GraphQL. This project provides an API client to fetch information about tokens, pairs, and swap transactions from Uniswap. It also includes utility functions for data conversions and metrics calculation.
+UniswapGraphQLClient is a Python library designed to interact with the Uniswap V2 and V3 subgraphs via GraphQL. This project provides an API client to fetch information about tokens, pairs, and swap transactions from Uniswap. It also includes utility functions for data conversions and metrics calculation.
 
 ## Features
-- Fetch token details by contract address
-- Retrieve pairs involving a particular token
-- Get swap transactions for a specific pair
+- Fetch token details by contract address for V2 and V3
+- Retrieve pairs involving a particular token for V2 and V3
+- Get swap transactions for a specific pair for V2 and V3
 - Utility functions for data conversion and error handling
 - Paginated data fetching
 - Real-time data updater service
+- Support for Uniswap V3 queries and metrics
 
 ## Table of Contents
 1. [Installation](#installation)
@@ -39,29 +41,12 @@ Alternatively, run the setup file to install the package:
 python setup.py install
 ```
 
-## Configuration
-
-Configuration settings can be found in `config/settings.py`. The settings include:
-
-- `API_ENDPOINT`: API endpoint URL (default is `https://api.example.com/`)
-- `API_KEY`: Your API key
-- `DEBUG`: Debug mode toggle
-- `LOG_LEVEL`: Logging level
-- `LOG_FILE`: The log file path
-
-It's advised to set these values in a `.env` file in the project root. Example:
-
-```env
-API_ENDPOINT=https://api.your_provider.com/
-API_KEY=your_secret_api_key
-DEBUG=True
-LOG_LEVEL=DEBUG
-LOG_FILE=your_log_file_path.log
-```
-
 ## Usage
 
-Here is an example code snippet on how to use the library:
+### Uniswap V2
+
+Here is an example code snippet on how to use the V2 library:
+
 
 ```python
 from api.client import UniswapClient
@@ -77,7 +62,26 @@ pairs = client.fetch_pairs_for_token('0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984
 print(f"Pairs: {pairs}")
 ```
 
-For more examples, please refer to the `main.py` file.
+
+### Uniswap V3
+
+Here is an example code snippet on how to use the V3 library:
+
+```python
+from api.client_v3 import UniswapV3Client
+
+client = UniswapV3Client()
+
+# Fetch token information
+token_data = client.fetch_token('0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984')
+print(f"Token Data: {token_data}")
+
+# Fetch pairs for a specific token
+pairs = client.fetch_pairs_for_token('0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984')
+print(f"Pairs: {pairs}")
+```
+
+For more examples, please refer to the `main.py` and `mainv3.py` files.
 
 ## Tests
 

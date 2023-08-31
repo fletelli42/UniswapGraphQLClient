@@ -1,5 +1,5 @@
 # GraphQL query to fetch details of a specific token by its contract address (id)
-FETCH_TOKEN_QUERY = """
+FETCH_V3_TOKEN_QUERY = """
 query FetchToken($id: ID!) {
     token(id: $id) {
         id
@@ -9,10 +9,10 @@ query FetchToken($id: ID!) {
 }
 """
 
-# GraphQL query to fetch all pairs that involve a specific token by its contract address (id)
-FETCH_PAIRS_FOR_TOKEN_QUERY = """
+# GraphQL query to fetch all pools that involve a specific token by its contract address (id)
+FETCH_V3_PAIRS_FOR_TOKEN_QUERY = """
 query FetchPairsForToken($id: ID!) {
-    pairs(where: {token0: $id}) {
+    pools(where: {token0: $id}) {
         id
         token0 {
             id
@@ -24,24 +24,22 @@ query FetchPairsForToken($id: ID!) {
             symbol
             name
         }
-        reserve0
-        reserve1
+        tick
+        sqrtPrice
     }
 }
 """
 
 # gql_queries.py
 
-FETCH_SWAP_TRANSACTIONS_QUERY = """
+FETCH_V3_SWAP_TRANSACTIONS_QUERY = """
 query swaps($pairId: ID!, $first: Int = 10, $orderBy: String = "timestamp", $orderDirection: String = "desc") {
-  swaps(where: { pair: $pairId }, first: $first, orderBy: $orderBy, orderDirection: $orderDirection) {
+  swaps(where: { pool: $pairId }, first: $first, orderBy: $orderBy, orderDirection: $orderDirection) {
     id
     timestamp
-    amount0In
-    amount0Out
-    amount1In
-    amount1Out
-    pair {
+    amount0
+    amount1
+    pool {
       token0 {
         id
         symbol
@@ -59,30 +57,28 @@ query swaps($pairId: ID!, $first: Int = 10, $orderBy: String = "timestamp", $ord
 """
 
 # Add this query at the end of the file
-FETCH_SWAP_TRANSACTIONS_FOR_TIMESTAMP_QUERY = """
+FETCH_V3_SWAP_TRANSACTIONS_FOR_TIMESTAMP_QUERY = """
 query FetchSwapsForPairAtTimestamp($pair_id: ID!, $start_time: BigInt!, $end_time: BigInt!) {
     swaps(
-        where: { pair: $pair_id, timestamp_gte: $start_time, timestamp_lte: $end_time },
+        where: { pool: $pair_id, timestamp_gte: $start_time, timestamp_lte: $end_time },
         orderBy: timestamp
     ) {
         id
         timestamp
-        amount0In
-        amount0Out
-        amount1In
-        amount1Out
-        pair {
+        amount0
+        amount1
+        pool {
             token0Price
             token1Price
         }
+        amountUSD
     }
 }
-
 """
 
-FETCH_SPECIFIC_PAIR = """
+FETCH_V3_SPECIFIC_PAIR = """
 query FetchSpecificPair($token0_id: ID!, $token1_id: ID!) {
-  pair0: pairs(where: {token0: $token0_id, token1: $token1_id}) {
+  pool0: pools(where: {token0: $token0_id, token1: $token1_id}) {
     id
     token0 {
       id
@@ -94,10 +90,11 @@ query FetchSpecificPair($token0_id: ID!, $token1_id: ID!) {
       symbol
       name
     }
-    reserve0
-    reserve1
+    token0Price
+    token1Price
+    volumeUSD
   }
-  pair1: pairs(where: {token0: $token1_id, token1: $token0_id}) {
+  pool1: pools(where: {token0: $token1_id, token1: $token0_id}) {
     id
     token0 {
       id
@@ -109,10 +106,9 @@ query FetchSpecificPair($token0_id: ID!, $token1_id: ID!) {
       symbol
       name
     }
-    reserve0
-    reserve1
+    token0Price
+    token1Price
+    volumeUSD
   }
 }
-
 """
-
