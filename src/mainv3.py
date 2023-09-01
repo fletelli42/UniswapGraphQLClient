@@ -10,11 +10,8 @@ def calculate_token_price_at_timestamp_v3(token_id, target_timestamp, client):
     swaps1, swaps2 = client.fetch_swaps_for_token_at_timestamp(token_id, target_timestamp)
     if not swaps1 or not swaps2:
         return None  # Return None if no pairs are found
-    
-    # print("Swaps 1: ", swaps1)
-    # print("Swaps 2: ", swaps2)
-    closest_swaps = []
 
+    closest_swaps = []
 
     # Step 3: Find the closest swap to the target timestamp for each pair
     closest_swap1 = min(swaps1, key=lambda x: abs(int(x['timestamp']) - target_timestamp))
@@ -53,7 +50,9 @@ def main():
     # Fetch a specific pair by token IDs
     example_token0_id = "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984"
     example_token1_id = "0xdac17f958d2ee523a2206206994597c13d831ec7"
-    target_timestamp = 1693542741
+    target_timestamp = 1693487300
+    calculate_token_price_at_timestamp_v3(example_token0_id, target_timestamp, client)
+
     tokens = client.fetch_token_list()
     for token in tokens:
         print("Token: ", token.symbol)

@@ -9,6 +9,18 @@ query FetchToken($id: ID!) {
 }
 """
 
+FETCH_TOKEN_LIST = """
+query FetchTokenList {
+  tokens(where: {tradeVolumeUSD_gt: "1000000000"}) {
+    id
+    symbol
+    name
+    decimals
+    tradeVolumeUSD
+  }
+}
+"""
+
 # GraphQL query to fetch all pairs that involve a specific token by its contract address (id)
 FETCH_PAIRS_FOR_TOKEN_QUERY = """
 query FetchPairsForToken($id: ID!) {
@@ -116,3 +128,34 @@ query FetchSpecificPair($token0_id: ID!, $token1_id: ID!) {
 
 """
 
+FETCH_SWAPS_TOKEN_IN_TOKEN_OUT = """
+query FetchSwapsTokenInTokenOut($token_id: ID!, $start_time: BigInt!, $end_time: BigInt!) {
+  swaps1: swaps(
+  first: 1
+ where: {pair_: {token0: $token_id}, timestamp_lte: $end_time}    
+ orderBy: timestamp
+    orderDirection: desc
+  ) {
+      id
+        timestamp
+        amount0In
+        amount0Out
+        amount1Out
+        amountUSD    
+  }
+  swaps2: swaps(
+  first: 1
+ where: {pair_: {token0: $token_id}, timestamp_lte: $end_time}    
+    orderBy: timestamp
+    orderDirection: desc
+  ) {
+      id
+        timestamp
+        amount0In
+        amount0Out
+        amount1In
+        amount1Out
+        amountUSD    
+  }
+}
+"""

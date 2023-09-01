@@ -12,11 +12,11 @@ query FetchToken($id: ID!) {
 
 FETCH_V3_TOKEN_LIST = """
 query FetchTokenList {
-  tokens(where: {_totalValueLockedUSD_gte: "1000000"}) {
+  tokens(first: 50, orderBy: _totalValueLockedUSD, orderDirection: desc) {
     id
     symbol
     name
-    decimals
+    _totalValueLockedUSD
   }
 }
 """
@@ -71,7 +71,7 @@ query swaps($pairId: ID!, $first: Int = 10, $orderBy: String = "timestamp", $ord
 FETCH_V3_SWAP_TRANSACTIONS_FOR_TIMESTAMP_QUERY = """
 query FetchSwapsForPairAtTimestamp($pair_id: ID!, $start_time: BigInt!, $end_time: BigInt!) {
     swaps(
-        where: { pool: $pair_id, timestamp_gte: $start_time, timestamp_lte: $end_time },
+        where: { pool: $pair_id, timestamp_lte: $end_time },
         orderBy: timestamp
     ) {
         id
@@ -88,23 +88,28 @@ query FetchSwapsForPairAtTimestamp($pair_id: ID!, $start_time: BigInt!, $end_tim
 """
 
 FETCH_V3_SWAPS_TOKEN_IN_TOKEN_OUT = """
-query FetchSwapsTokenInTokenOut($token_id: ID!, $start_time: BigInt!, $end_time: BigInt!) {
+query FetchSwapsTokenInTokenOut($token_id: ID!, $end_time: BigInt!) {
   swaps1: swaps(
-    where: {tokenIn: $token_id, timestamp_gte: $start_time, timestamp_lte: $end_time},
+    first: 1
+    where: {tokenIn: $token_id, timestamp_lte: $end_time},
     orderBy: timestamp
     orderDirection: desc
   ) {
       id
         timestamp
-    	amountIn
-        amountInUSD    
+        amountIn
+        amountInUSD  
+  
   }
   swaps2: swaps(
-    where: {tokenOut: $token_id, timestamp_gte: 1692997679, timestamp_lte: 1693540171},
+    first: 1
+    where: {tokenOut: $token_id, timestamp_lte: $end_time},
     orderBy: timestamp
+    orderDirection: desc
   ) {
       id
         timestamp
+ 
     	amountOut
         amountOutUSD    
   }

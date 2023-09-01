@@ -1,9 +1,10 @@
 import json
 import requests
-from .gql_queries import FETCH_TOKEN_QUERY, FETCH_PAIRS_FOR_TOKEN_QUERY, FETCH_SWAP_TRANSACTIONS_QUERY, FETCH_SWAP_TRANSACTIONS_FOR_TIMESTAMP_QUERY, FETCH_SPECIFIC_PAIR
+from .gql_queries import FETCH_TOKEN_QUERY, FETCH_PAIRS_FOR_TOKEN_QUERY, FETCH_SWAP_TRANSACTIONS_QUERY, FETCH_SWAP_TRANSACTIONS_FOR_TIMESTAMP_QUERY, FETCH_SPECIFIC_PAIR, FETCH_SWAPS_TOKEN_IN_TOKEN_OUT, FETCH_TOKEN_LIST
 from models.pair import Pair
 from models.token import Token
 from models.transaction import Transaction
+from requests.exceptions import Timeout
 
 
 class UniswapClient:
@@ -14,11 +15,13 @@ class UniswapClient:
     def send_query(self, query, variables={}):
         payload = {'query': query, 'variables': variables}
         headers = {'Content-Type': 'application/json'}
-        response = requests.post(self.endpoint, json=payload, headers=headers)
-
+        try:
+            response = requests.post(self.endpoint, json=payload, headers=headers, timeout=5)
+        except Timeout:
+            return None
+        
         if response.status_code != 200:
             raise Exception(f"Query failed with status code {response.status_code}")
-
         return json.loads(response.content.decode())
 
     def fetch_token(self, token_id):
@@ -30,6 +33,18 @@ class UniswapClient:
         return None
     
 
+    def fetch_token_list(self):
+        
+        response = self.send_query(FETCH_TOKEN_LIST)
+        print(response)
+        tokens_data = response.get('data', {}).get('tokens', {})
+        
+        tokens = []
+        for token in tokens_data:
+            tokens.append(Token.from_json(token))
+        
+        return tokens
+    
     def fetch_pairs_for_token(self, token_id):
         response = self.send_query(FETCH_PAIRS_FOR_TOKEN_QUERY, {'id': token_id})
         pairs_data = response.get('data', {}).get('pairs', [])
@@ -75,6 +90,21 @@ class UniswapClient:
         return response.get('data', {}).get('swaps', [])
 
 
+    def fetch_swaps_for_token_at_timestamp(self, pair_id, target_timestamp, time_range=6000):
+        start_time = target_timestamp - time_range
+        end_time = target_timestamp
+
+        variables = {
+            'token_id': pair_id,
+            'start_time': start_time,
+            'end_time': end_time
+        }
+
+        response = self.send_query(FETCH_SWAPS_TOKEN_IN_TOKEN_OUT, variables)
+        #print(response)
+        if response:
+            return response.get('data', {}).get('swaps1'), response.get('data', {}).get('swaps2')
+        return None
     def fetch_pairs_for_token(self, token_id):
         response = self.send_query(FETCH_PAIRS_FOR_TOKEN_QUERY, {'id': token_id})
         pairs_data = response.get('data', {}).get('pairs', [])

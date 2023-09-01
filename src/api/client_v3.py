@@ -4,6 +4,8 @@ from .gql_queries_v3 import  FETCH_V3_TOKEN_QUERY, FETCH_V3_PAIRS_FOR_TOKEN_QUER
 from models.pair_v3 import PairV3
 from models.token_v3 import TokenV3
 from models.transaction_v3 import TransactionV3
+from requests.exceptions import Timeout
+
 
 class UniswapV3Client:
 
@@ -13,8 +15,11 @@ class UniswapV3Client:
     def send_query(self, query, variables={}):
         payload = {'query': query, 'variables': variables}
         headers = {'Content-Type': 'application/json'}
-        response = requests.post(self.endpoint, json=payload, headers=headers)
-
+        try:
+            response = requests.post(self.endpoint, json=payload, headers=headers, timeout=5)
+        except Timeout:
+            return None
+        
         if response.status_code != 200:
             raise Exception(f"Query failed with status code {response.status_code}")
 
@@ -31,7 +36,6 @@ class UniswapV3Client:
     def fetch_token_list(self):
         
         response = self.send_query(FETCH_V3_TOKEN_LIST)
-        print(response)
         tokens_data = response.get('data', {}).get('tokens', {})
         
         tokens = []
@@ -70,17 +74,19 @@ class UniswapV3Client:
 
     def fetch_swaps_for_token_at_timestamp(self, pair_id, target_timestamp, time_range=6000):
         start_time = target_timestamp - time_range
-        end_time = target_timestamp + time_range
+        end_time = target_timestamp
 
         variables = {
             'token_id': pair_id,
-            'start_time': start_time,
             'end_time': end_time
         }
 
 
         response = self.send_query(FETCH_V3_SWAPS_TOKEN_IN_TOKEN_OUT, variables)
-        return response.get('data', {}).get('swaps1'), response.get('data', {}).get('swaps2')
+        if response:
+            return response.get('data', {}).get('swaps1'), response.get('data', {}).get('swaps2')
+        else:
+            return None
     
     def fetch_specific_pair(self, token0_id, token1_id):
         token0_id = token0_id.lower()
