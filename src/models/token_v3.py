@@ -6,6 +6,9 @@ class TokenV3:
         self.name = name
         self.decimals = decimals  # New field for V3
 
+    def __repr__(self):
+        return f"Token(id={self.id}, symbol={self.symbol}, name={self.name}, decimals={self.decimals})"
+    
     @classmethod
     def from_json(cls, json_data):
         return cls(

@@ -58,7 +58,6 @@ query swaps($pairId: ID!, $first: Int = 10, $orderBy: String = "timestamp", $ord
 }
 """
 
-# Add this query at the end of the file
 FETCH_SWAP_TRANSACTIONS_FOR_TIMESTAMP_QUERY = """
 query FetchSwapsForPairAtTimestamp($pair_id: ID!, $start_time: BigInt!, $end_time: BigInt!) {
     swaps(
@@ -75,6 +74,7 @@ query FetchSwapsForPairAtTimestamp($pair_id: ID!, $start_time: BigInt!, $end_tim
             token0Price
             token1Price
         }
+        amountUSD
     }
 }
 

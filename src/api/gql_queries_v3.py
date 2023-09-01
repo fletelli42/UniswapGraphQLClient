@@ -5,10 +5,21 @@ query FetchToken($id: ID!) {
         id
         symbol
         name
+        decimals
     }
 }
 """
 
+FETCH_V3_TOKEN_LIST = """
+query FetchTokenList {
+  tokens(where: {_totalValueLockedUSD_gte: "1000000"}) {
+    id
+    symbol
+    name
+    decimals
+  }
+}
+"""
 # GraphQL query to fetch all pools that involve a specific token by its contract address (id)
 FETCH_V3_PAIRS_FOR_TOKEN_QUERY = """
 query FetchPairsForToken($id: ID!) {
@@ -73,6 +84,30 @@ query FetchSwapsForPairAtTimestamp($pair_id: ID!, $start_time: BigInt!, $end_tim
         }
         amountUSD
     }
+}
+"""
+
+FETCH_V3_SWAPS_TOKEN_IN_TOKEN_OUT = """
+query FetchSwapsTokenInTokenOut($token_id: ID!, $start_time: BigInt!, $end_time: BigInt!) {
+  swaps1: swaps(
+    where: {tokenIn: $token_id, timestamp_gte: $start_time, timestamp_lte: $end_time},
+    orderBy: timestamp
+    orderDirection: desc
+  ) {
+      id
+        timestamp
+    	amountIn
+        amountInUSD    
+  }
+  swaps2: swaps(
+    where: {tokenOut: $token_id, timestamp_gte: 1692997679, timestamp_lte: 1693540171},
+    orderBy: timestamp
+  ) {
+      id
+        timestamp
+    	amountOut
+        amountOutUSD    
+  }
 }
 """
 

@@ -70,7 +70,7 @@ class UniswapClient:
         # Your existing GraphQL query assumed to include the time range filter
         query = FETCH_SWAP_TRANSACTIONS_FOR_TIMESTAMP_QUERY
 
-        print(query, variables)
+        #print(query, variables)
         response = self.send_query(query, variables)
         return response.get('data', {}).get('swaps', [])
 

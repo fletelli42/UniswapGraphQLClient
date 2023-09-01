@@ -1,44 +1,63 @@
 from api.client_v3 import UniswapV3Client
 
-def calculate_token_price_at_timestamp_v3(token0_id, token1_id, target_timestamp):
-    client = UniswapV3Client()
-
-    token0_id = token0_id.lower()
-    token1_id = token1_id.lower()
-
-    target_pair = client.fetch_specific_pair(token0_id, token1_id)
-
-    if target_pair is None:
-        print("No valid pair found.")
-        return None
-  
-
-    swaps = client.fetch_swaps_for_pair_at_timestamp(target_pair.id, target_timestamp)
+def calculate_token_price_at_timestamp_v3(token_id, target_timestamp, client):
+    # Step 1: Fetch pairs for the token
+    token_id = token_id.lower()
+    token_info = client.fetch_token(token_id)
     
-    #print(swaps)
-    if len(swaps) == 0:
-        return None  # No swaps occurred around the given timestamp
-
+    decimals = token_info.decimals
+    print(decimals)
+    swaps1, swaps2 = client.fetch_swaps_for_token_at_timestamp(token_id, target_timestamp)
+    if not swaps1 or not swaps2:
+        return None  # Return None if no pairs are found
     
-    # Find the swap closest to the target timestamp
-    closest_swap = min(swaps, key=lambda x: abs(int(x['timestamp']) - target_timestamp))
-    print(closest_swap)
-    # Using hypothetical fields, please replace these with actual V3 schema fields if they differ
-    token0_price = abs(float(closest_swap['amount0'])) / abs(float(closest_swap['amount1']))  # Replace 'token0Price' with the actual field name if it's different
-    token1_price = abs(float(closest_swap['amount1'])) / abs(float(closest_swap['amount0']))   # Replace 'token1Price' with the actual field name if it's different
+    # print("Swaps 1: ", swaps1)
+    # print("Swaps 2: ", swaps2)
+    closest_swaps = []
 
-    print(token0_price, token1_price)
-    return token0_price, token1_price
+
+    # Step 3: Find the closest swap to the target timestamp for each pair
+    closest_swap1 = min(swaps1, key=lambda x: abs(int(x['timestamp']) - target_timestamp))
+    
+    closest_swaps.append(closest_swap1)
+
+    closest_swap2 = min(swaps2, key=lambda x: abs(int(x['timestamp']) - target_timestamp))
+
+    closest_swaps.append(closest_swap2)
+
+    if not closest_swaps:
+        return None  # Return None if no swaps are found for any pairs
+   
+    # Among the closest_swaps, find the absolute closest swap
+    absolute_closest_swap = min(closest_swaps, key=lambda x: abs(int(x['timestamp']) - target_timestamp))
+    
+
+    if "amountIn" in absolute_closest_swap:
+        amountUSD = float(absolute_closest_swap['amountInUSD'])
+        amountIn = float(absolute_closest_swap["amountIn"])
+        token_price = (amountUSD / amountIn)  * (10 ** int(decimals))
+    elif "amountOut" in absolute_closest_swap:
+        amountUSD = float(absolute_closest_swap['amountOutUSD'])
+        amountOut = float(absolute_closest_swap["amountOut"])
+        token_price = (amountUSD / amountOut) * (10 ** int(decimals))
+
+    print("Token: ", token_info.symbol)
+    print("Timestamp diff: ", int(absolute_closest_swap['timestamp']) - target_timestamp)
+    print("Token price: ", token_price)
+    return token_price
 
 
 
 def main():
-
+    client = UniswapV3Client()
     # Fetch a specific pair by token IDs
-    example_token0_id = "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
+    example_token0_id = "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984"
     example_token1_id = "0xdac17f958d2ee523a2206206994597c13d831ec7"
-    target_timestamp = 1693487300
-    calculate_token_price_at_timestamp_v3(example_token0_id, example_token1_id, target_timestamp)
+    target_timestamp = 1693542741
+    tokens = client.fetch_token_list()
+    for token in tokens:
+        print("Token: ", token.symbol)
+        calculate_token_price_at_timestamp_v3(token.id, target_timestamp, client)
 
 
 if __name__ == "__main__":

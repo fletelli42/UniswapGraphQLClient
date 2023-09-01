@@ -1,13 +1,13 @@
 import json
 import requests
-from .gql_queries_v3 import  FETCH_V3_TOKEN_QUERY, FETCH_V3_PAIRS_FOR_TOKEN_QUERY, FETCH_V3_SWAP_TRANSACTIONS_QUERY, FETCH_V3_SWAP_TRANSACTIONS_FOR_TIMESTAMP_QUERY, FETCH_V3_SPECIFIC_PAIR #,  Assuming ql_queries contains v3 queries as well
+from .gql_queries_v3 import  FETCH_V3_TOKEN_QUERY, FETCH_V3_PAIRS_FOR_TOKEN_QUERY, FETCH_V3_SWAP_TRANSACTIONS_QUERY, FETCH_V3_SWAPS_TOKEN_IN_TOKEN_OUT, FETCH_V3_SPECIFIC_PAIR, FETCH_V3_TOKEN_LIST #,  Assuming ql_queries contains v3 queries as well
 from models.pair_v3 import PairV3
 from models.token_v3 import TokenV3
 from models.transaction_v3 import TransactionV3
 
 class UniswapV3Client:
 
-    def __init__(self, endpoint='https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3'):
+    def __init__(self, endpoint='https://api.thegraph.com/subgraphs/name/steegecs/uniswap-v3-ethereum'):
         self.endpoint = endpoint
 
     def send_query(self, query, variables={}):
@@ -27,10 +27,24 @@ class UniswapV3Client:
         if token_data:
             return TokenV3.from_json(token_data)
         return None
+    
+    def fetch_token_list(self):
+        
+        response = self.send_query(FETCH_V3_TOKEN_LIST)
+        print(response)
+        tokens_data = response.get('data', {}).get('tokens', {})
+        
+        tokens = []
+        for token in tokens_data:
+            tokens.append(TokenV3.from_json(token))
+        
+        return tokens
 
     def fetch_pairs_for_token(self, token_id):
+
         response = self.send_query(FETCH_V3_PAIRS_FOR_TOKEN_QUERY, {'id': token_id})
-        pairs_data = response.get('data', {}).get('pairs', [])
+
+        pairs_data = response.get('data', {}).get('pools', [])
         
         pairs = []
         for pair_data in pairs_data:
@@ -54,18 +68,19 @@ class UniswapV3Client:
         
         return transactions
 
-    def fetch_swaps_for_pair_at_timestamp(self, pair_id, target_timestamp, time_range=600000):
+    def fetch_swaps_for_token_at_timestamp(self, pair_id, target_timestamp, time_range=6000):
         start_time = target_timestamp - time_range
         end_time = target_timestamp + time_range
 
         variables = {
-            'pair_id': pair_id,
+            'token_id': pair_id,
             'start_time': start_time,
             'end_time': end_time
         }
 
-        response = self.send_query(FETCH_V3_SWAP_TRANSACTIONS_FOR_TIMESTAMP_QUERY, variables)
-        return response.get('data', {}).get('swaps', [])
+
+        response = self.send_query(FETCH_V3_SWAPS_TOKEN_IN_TOKEN_OUT, variables)
+        return response.get('data', {}).get('swaps1'), response.get('data', {}).get('swaps2')
     
     def fetch_specific_pair(self, token0_id, token1_id):
         token0_id = token0_id.lower()
@@ -75,6 +90,7 @@ class UniswapV3Client:
         response = self.send_query(FETCH_V3_SPECIFIC_PAIR, variables)
         pairs_data = response.get('data', {})
 
+        print(pairs_data)
         pair0_data = pairs_data.get('pool0', [])
         pair1_data = pairs_data.get('pool1', [])
         
